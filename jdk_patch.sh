@@ -31,7 +31,7 @@ if [ "$(whoami)" != "$user" ]; then
 fi
 
 # Yeni JDK ile ilişkili çalışan bir işlem var mı kontrolü- kullanıcı tarafından eski jdk pathinin yeni jdk path parametresine giriş ihtimali
-new_jdk_processes=$(pgrep -f "$new_jdk_path")
+new_jdk_processes=$(ps aux | grep "$new_jdk_path" | grep -v "grep" | grep -v "jdk_patch.sh")
 
 if [ -n "$new_jdk_processes" ]; then
     echo "$new_jdk_path pathinde çalışan java process bulundu"
