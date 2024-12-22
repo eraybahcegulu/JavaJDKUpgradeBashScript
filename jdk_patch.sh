@@ -44,7 +44,9 @@ echo "Eski JDK Path: $old_jdk_path"
 echo "Yeni JDK Path: $new_jdk_path"
 read -p "Eski-Yeni JDK path onay (E/H): " confirm
 
-if [[ "$confirm" != "E" && "$confirm" != "e" ]]; then
+if [[ "$confirm" == "E" || "$confirm" == "e" ]]; then
+    echo "Onaylandı"
+else
     echo "İptal edildi"
     exit 1
 fi
