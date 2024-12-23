@@ -12,6 +12,7 @@
 old_jdk_path=$1
 new_jdk_path=$2
 user=$3
+current_pid=$$
 
 # path parametre kontrolleri
 if [ ! -d "$old_jdk_path" ]; then
@@ -31,7 +32,7 @@ if [ "$(whoami)" != "$user" ]; then
 fi
 
 # Yeni JDK ile ilişkili çalışan bir işlem var mı kontrolü- kullanıcı tarafından eski jdk pathinin yeni jdk path parametresine giriş ihtimali
-new_jdk_processes=$(ps aux | grep "$new_jdk_path" | grep -v "grep" | grep -v "jdk_patch.sh")
+new_jdk_processes=$(ps aux | grep "$new_jdk_path" | grep -v "grep" | grep -v $current_pid)
 
 if [ -n "$new_jdk_processes" ]; then
     echo "$new_jdk_path pathinde çalışan java process bulundu"
@@ -52,14 +53,21 @@ else
 fi
 
 # Eski JDK dizini sahipliği kontrolü
-owner=$(stat -c %U "$old_jdk_path")
-if [ "$owner" != "$user" ]; then
-  echo "Eski JDK dizini '$old_jdk_path' '$user' kullanıcısına ait değil. Geçerli sahip: $owner."
+old_jdk_path_owner=$(stat -c %U "$old_jdk_path")
+if [ "$old_jdk_path_owner" != "$user" ]; then
+  echo "Eski JDK dizini '$old_jdk_path' '$user' kullanıcısına ait değil. Geçerli sahip: $old_jdk_path_owner."
+  exit 1
+fi
+
+# Yeni JDK dizini sahipliği kontrolü
+new_jdk_path_owner=$(stat -c %U "$new_jdk_path")
+if [ "$new_jdk_path_owner" != "$user" ]; then
+  echo "Yeni JDK dizini '$new_jdk_path' '$user' kullanıcısına ait değil. Geçerli sahip: $new_jdk_path_owner."
   exit 1
 fi
 
 # Java işlemlerini sonlandırma
-pids=$(pgrep -f java)
+pids=$(pgrep -f java | grep -v "grep" | grep -v $current_pid)
 if [ -n "$pids" ]; then
     echo "$pids" | xargs -I {} echo "Sonlandırılıyor, pid: {}"
     if echo "$pids" | xargs kill -9; then
