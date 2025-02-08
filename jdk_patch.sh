@@ -40,6 +40,14 @@ if [ -n "$new_jdk_processes" ]; then
     exit 1
 fi
 
+old_jdk_processes=$(ps aux | grep "$old_jdk_path" | grep -v "grep" | grep -v $current_pid)
+
+if [ -n "$old_jdk_processes" ]; then
+    echo "$old_jdk_path (eski) pathinde çalışan java process bulundu"
+    echo "$old_jdk_processes"
+    exit 1
+fi
+
 # Kullanıcı onayı alma
 echo "Eski JDK Path: $old_jdk_path"
 echo "Yeni JDK Path: $new_jdk_path"
@@ -64,19 +72,6 @@ new_jdk_path_owner=$(stat -c %U "$new_jdk_path")
 if [ "$new_jdk_path_owner" != "$user" ]; then
   echo "Yeni JDK dizini '$new_jdk_path' '$user' kullanıcısına ait değil. Geçerli sahip: $new_jdk_path_owner."
   exit 1
-fi
-
-# Java işlemlerini sonlandırma
-pids=$(pgrep -f java | grep -v "grep" | grep -v $current_pid)
-if [ -n "$pids" ]; then
-    echo "$pids" | xargs -I {} echo "Sonlandırılıyor, pid: {}"
-    if echo "$pids" | xargs kill -9; then
-        echo "Tüm Java processleri başarıyla sonlandırıldı."
-    else
-        echo "Java processleri sonlandırılırken hata oluştu"
-    fi
-else
-    echo "Çalışan Java processi bulunamadı"
 fi
 
 # cacerts dosyasını kopyalama
