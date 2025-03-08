@@ -6,13 +6,12 @@
 # 3 appadmin: whoami ve aktif olan jdk useri
 
 #execute
-#/app/scripts/jdk_patch.sh /app/jdk /app/jdk1.8.0_391 appadmin
+#/app/scripts/jdk_upgrade.sh /app/jdk /app/jdk1.8.0_391 appadmin
 
 # user input kontrolü
 old_jdk_path=$1
 new_jdk_path=$2
 user=$3
-current_pid=$$
 
 # path parametre kontrolleri
 if [ ! -d "$old_jdk_path" ]; then
@@ -66,9 +65,12 @@ cp "$old_cacerts_path" "$new_cacerts_path" && echo "cacerts dosyası kopyalandı
 # Eski JDK'yı yedekleme
 jdk_backup_current_date=$(date +"%Y-%m-%d_%H-%M-%S")
 backup_path="${old_jdk_path}_${jdk_backup_current_date}_old"
+tmp_backup_path="/tmp/$(basename "$old_jdk_path")_${jdk_backup_current_date}_old"
+
+cp -r "$old_jdk_path" "$tmp_backup_path" && echo "Eski JDK klasörü tmp altında yedeklendi." || { echo "Eski JDK klasörü tmp altında yedeklenirken hata oluştu"; exit 1; }
 mv "$old_jdk_path" "$backup_path" && echo "Eski JDK klasörü _old olarak yedeklendi." || { echo "Eski JDK klasörü yedeklenirken hata oluştu"; exit 1; }
 
 # Yeni JDK'yı eski JDK'nın yerine taşıma
 mv "$new_jdk_path" "$old_jdk_path" && echo "Yeni JDK klasörü eski JDK'nın yerine taşındı" || { echo "Yeni JDK taşınamadı"; exit 1; }
 
-echo "JDK patch işlemi tamamlandı"
+echo "JDK upgrade işlemi tamamlandı"
