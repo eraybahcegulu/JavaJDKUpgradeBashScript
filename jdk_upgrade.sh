@@ -59,11 +59,26 @@ fi
 # cacerts dosyasını kopyalama
 old_cacerts_path="$old_jdk_path/jre/lib/security/cacerts"
 new_cacerts_path="$new_jdk_path/jre/lib/security/cacerts"
+java_security_path="$new_jdk_path/jre/lib/security/java.security"
 
 cp "$old_cacerts_path" "$new_cacerts_path" && echo "cacerts dosyası kopyalandı" || { echo "cacerts dosyası kopyalanırken hata oluştu"; exit 1; }
 
+if sed -i 's|securerandom.source=file:/dev/random|securerandom.source=file:/dev/./urandom|g' "$java_security_path"; then
+    if grep -q "securerandom.source=file:/dev/./urandom" "$java_security_path"; then
+        echo "security dosyası güncellendi"
+    else
+        echo "security dosyasında değiştirilecek satır bulunamadı"
+        exit 1
+    fi
+else
+    echo "security dosyası güncellenirken hata oluştu"
+    exit 1
+fi
+
 # Eski JDK'yı yedekleme
 jdk_backup_current_date=$(date +"%Y-%m-%d_%H-%M-%S")
+#jdk_version=$("${old_jdk_path}/bin/java" -version 2>&1 | head -n 1 | awk '{print $3}' | tr -d '"')
+
 backup_path="${old_jdk_path}_${jdk_backup_current_date}_old"
 tmp_backup_path="/tmp/$(basename "$old_jdk_path")_${jdk_backup_current_date}_old"
 
